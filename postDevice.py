@@ -11,7 +11,7 @@ headers = {
     'content-type': 'application/json'
 }
 
-class MyThread(threading.Thread):
+class PostDeviceEventLoop(threading.Thread):
     def __init__(self,thread_id, name, delay):
         threading.Thread.__init__(self)
         self.thread_id = thread_id
@@ -22,7 +22,7 @@ class MyThread(threading.Thread):
         print('開始執行緒:'+self.name)
         postdevice(self.name,self.delay,6)        
        
-class MyThread2(threading.Thread):
+class ControlPostValue(threading.Thread):
     def __init__(self,thread_id, name):
         threading.Thread.__init__(self)
         self.thread_id = thread_id
@@ -37,12 +37,12 @@ def changevalue(thread_name,counter):
         global value , stopthread
         print('-------------Enter new value-------------')
         order = input()
-        if order == "777":
+        if order == "stop":
             stopthread = 1
             time.sleep(5)
             order = 0
             stopthread = input()
-            if stopthread == "0":
+            if stopthread == "run":
                 event.set()
                 event.clear()
         else:
@@ -52,6 +52,7 @@ def changevalue(thread_name,counter):
 def postdevice(thread_name,delay,counter):
     global stopthread
     while counter >= 1:
+        time.sleep(delay)
         data1 = {
             "setData":{
                 "deviceName": "blackpink",
@@ -59,7 +60,7 @@ def postdevice(thread_name,delay,counter):
                 "unit": "cm"
             }
         }
-        time.sleep(delay)
+
         response = session_requests.post(url, data =json.dumps(data1),headers = headers)
         if response.ok == True:
             print(thread_name+' [Success]')
@@ -70,11 +71,11 @@ def postdevice(thread_name,delay,counter):
 
         if stopthread == 1:
             print('Stop PostThread')
-            event.wait(600)
+            event.wait()
        
 event = threading.Event()            
-PostThreda1 = MyThread(1, 'PostThreda-1', 5)
-changevalue1 = MyThread2(2,'ChangeValue-1')
+PostThreda1 = PostDeviceEventLoop(1, 'PostThreda-1', 5)
+changevalue1 = ControlPostValue(2,'ChangeValue-1')
 PostThreda1.start()
 changevalue1.start()
 PostThreda1.join()
